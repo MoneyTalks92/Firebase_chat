@@ -20,7 +20,7 @@ function displayMessage(message) {
   <i class="fas fa-user"></i>
   <div>
     <span class="username">${message.username}
-      <time>20:12 PM</time>
+      <time>${message.date}</time>
     </span>
     <br>
     <span class="message-text">${message.message}
@@ -41,7 +41,8 @@ function displayMessage(message) {
 const createMessage = () => {
   const message = document.querySelector('#message').value;
   const username = document.querySelector('#nickname').value;
-  const date = firebase.firestore.Timestamp.fromDate(new Date());
+  // dátum átkonvertálása, majd átalakítása
+  const date = firebase.firestore.Timestamp.fromDate(new Date()).toDate().toLocaleString('hu-HU');
   // ha a változó neve ugyanaz, mint a key amit létre akarunk hozni az objectben, akkor nem kell kétszer kiírni
   return {
     message,
