@@ -15,8 +15,8 @@ async function sendMessage(data) {
   console.log(res);
 }
 
-function displayMessage(message) {
-  const messageDOM = `<div class="message">
+function displayMessage(message, id) {
+  const messageDOM = `<div class="message" data-id="${id}">
   <i class="fas fa-user"></i>
   <div>
     <span class="username">${message.username}
@@ -36,6 +36,10 @@ function displayMessage(message) {
     scrollMode: 'if-needed',
     block: 'end'
   });
+  document.querySelector(`[data-id="${id}"] .fa-trash-alt`).addEventListener('click', () => {
+    deleteMessage(id);
+    removeMessage(id);
+  });
 }
 
 const createMessage = () => {
@@ -49,6 +53,16 @@ const createMessage = () => {
     username,
     date
   };
+}
+
+// üzenet törlése az UI-ról
+function removeMessage(id) {
+  document.querySelector(`[data-id="${id}"]`).remove();
+}
+
+// üzenet törlése az adatbázisból
+function deleteMessage(id) {
+  db.collection('messages').doc(id).delete();
 }
 
 async function displayAllMessages() {
@@ -84,14 +98,15 @@ document.addEventListener('keyup', (event) => {
 db.collection('messages').orderBy('date', 'asc')
   .onSnapshot((snapshot) => {
     snapshot.docChanges().forEach((change) => {
+      // változások vizsgálata
       if (change.type === 'added') {
-        displayMessage(change.doc.data());
+        displayMessage(change.doc.data(), change.doc.id);
       }
       if (change.type === 'modified') {
-        console.log('Modified message: ', change.doc.data());
+        displayMessage(change.doc.data(), change.doc.id);
       }
       if (change.type === 'removed') {
-        console.log('Removed message: ', change.doc.data());
+        removeMessage(change.doc.id);
       }
     });
   });
