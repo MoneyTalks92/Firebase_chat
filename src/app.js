@@ -40,6 +40,49 @@ function displayMessage(message, id) {
     deleteMessage(id);
     removeMessage(id);
   });
+  // ha rákattintunk az edit iconra, meghívódik a displayEditMessage függvény
+  document.querySelector(`[data-id="${id}"] .fa-pen`).addEventListener('click', () => {
+    displayEditMessage(id)
+  });
+}
+
+function displayEditMessage(id) {
+  const markup = /*html*/`
+  <div class="popup-container" id="popup">
+    <div class="edit-message" id="edit-message" data-id="${id}">
+      <div id="close-popup" class="button">
+        Close <i class="fa fa-window-close" aria-hidden="true"></i>
+      </div>
+      <textarea id="edit" name="" cols="30" rows="10">${document.querySelector(`.message[data-id="${id}"] .message-text`).textContent.trim()
+    }</textarea>
+      <div id="save-message" class="button">
+        Save message<i class="fas fa-save"></i>
+      </div>
+    </div>
+  </div>
+`;
+  document.querySelector('#messages').insertAdjacentHTML('beforeend', markup);
+
+  // ha rákattintunk a close gombra, akkor a popup eltűnik
+  document.querySelector('#edit-message #close-popup').addEventListener('click', () => {
+    document.querySelector('#popup').remove();
+  });
+
+  // ha rákattinunk a save gombra, leolvassuk az új üzenetet, frissítjük, a popupot eltüntetjük, modifyMessage függvényt meghívjuk
+  document.querySelector('#save-message .fa-save').addEventListener('click', () => {
+    let newMessage = document.querySelector('#edit').value;
+    document.querySelector(`.message[data-id="${id}"] .message-text`).textContent = newMessage;
+    const edit = document.querySelector('#edit-message').dataset.id;
+    document.querySelector('#popup').remove();
+    modifyMessage(edit, newMessage);
+  });
+}
+
+// üzenet módosítása az adatbázisban
+async function modifyMessage(id, newMessage) {
+  db.collection('messages').doc(id).update({
+    message: newMessage
+  });
 }
 
 const createMessage = () => {
@@ -100,9 +143,6 @@ db.collection('messages').orderBy('date', 'asc')
     snapshot.docChanges().forEach((change) => {
       // változások vizsgálata
       if (change.type === 'added') {
-        displayMessage(change.doc.data(), change.doc.id);
-      }
-      if (change.type === 'modified') {
         displayMessage(change.doc.data(), change.doc.id);
       }
       if (change.type === 'removed') {
